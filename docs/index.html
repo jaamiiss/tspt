@@ -1,0 +1,285 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="TSPT (Tapo SmartPlug Tray): standalone native Linux taskbar indicator and 20–80% Auto-Charge Guard for Tapo smart plugs.">
+  <title>TSPT: Tapo SmartPlug Tray for Linux</title>
+  <style>
+    :root { color-scheme: dark; --bg:#0f171a; --panel:#172429; --panel-alt:#121e22; --line:#2e464d; --text:#eef6f2; --muted:#a8beb8; --mint:#8ee3b5; --amber:#f0c475; }
+    * { box-sizing:border-box; }
+    body { margin:0; background:radial-gradient(circle at 78% 10%, #20493e 0, transparent 34%), var(--bg); color:var(--text); font:16px/1.6 system-ui, -apple-system, Segoe UI, Roboto, sans-serif; }
+    .wrap { width:min(1040px, calc(100% - 40px)); margin:auto; }
+    header { display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:16px; padding:26px 0; }
+    .brand { display:flex; align-items:center; gap:10px; font-weight:800; color:var(--text); text-decoration:none; }
+    .badge { width:32px; height:32px; border-radius:9px; display:grid; place-items:center; background:var(--mint); color:#0d2419; font-weight:900; }
+    nav ul { display:flex; flex-wrap:wrap; gap:20px; list-style:none; margin:0; padding:0; font-size:.92rem; }
+    nav a { color:var(--muted); text-decoration:none; }
+    nav a:hover { color:var(--text); }
+    .hero { display:grid; grid-template-columns:1.15fr .85fr; gap:48px; align-items:center; padding:64px 0 80px; }
+    .eyebrow { color:var(--mint); font-size:.78rem; font-weight:800; letter-spacing:.16em; text-transform:uppercase; }
+    h1 { font-size:clamp(2.4rem, 5vw, 4.2rem); line-height:1.08; letter-spacing:-.04em; margin:16px 0; }
+    h2 { font-size:clamp(1.6rem, 3vw, 2.2rem); margin:0 0 14px; letter-spacing:-.03em; }
+    h3 { margin:10px 0 8px; font-size:1.08rem; }
+    p { color:var(--muted); margin:0; }
+    p + p { margin-top:12px; }
+    code { font-family:ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size:.9em; color:var(--mint); }
+    pre code { color:inherit; font-size:inherit; }
+    .actions { display:flex; flex-wrap:wrap; gap:12px; margin-top:28px; }
+    .btn { display:inline-flex; align-items:center; padding:11px 20px; border-radius:10px; border:1px solid var(--line); color:var(--text); text-decoration:none; font-weight:700; }
+    .btn.primary { background:var(--mint); border-color:var(--mint); color:#0d2419; }
+    .tray-mock { background:linear-gradient(155deg, #1f3338, #132024); border:1px solid #486962; border-radius:20px; padding:20px; box-shadow:0 24px 64px #00000066; }
+    .topbar { display:flex; justify-content:space-between; align-items:center; background:#0b1315; padding:8px 14px; border-radius:10px; font-size:.82rem; color:#d8eae2; margin-bottom:14px; }
+    .menu { background:var(--panel-alt); border:1px solid var(--line); border-radius:12px; padding:10px 0; font-size:.9rem; }
+    .item { padding:8px 18px; display:flex; justify-content:space-between; }
+    .item.muted { color:var(--muted); }
+    .item.active { color:var(--mint); font-weight:600; }
+    .sep { height:1px; background:var(--line); margin:6px 0; }
+    section { padding:64px 0; border-top:1px solid var(--line); }
+    .grid { display:grid; grid-template-columns:repeat(3, 1fr); gap:16px; margin-top:24px; }
+    .grid-2 { display:grid; grid-template-columns:repeat(2, 1fr); gap:16px; margin-top:24px; }
+    .card { background:var(--panel); border:1px solid var(--line); border-radius:14px; padding:22px; }
+    .usage-list { margin:24px 0 0; padding:0; list-style:none; display:grid; grid-template-columns:repeat(2, 1fr); gap:14px; }
+    .usage-list li { background:var(--panel); border:1px solid var(--line); border-radius:12px; padding:16px 18px; color:var(--muted); }
+    .usage-list strong { display:block; color:var(--text); margin-bottom:4px; }
+    figure { margin:20px 0 0; }
+    figcaption { font-size:.86rem; font-weight:600; color:var(--muted); margin-bottom:8px; }
+    pre { margin:0; background:#091113; border:1px solid var(--line); border-radius:12px; padding:18px; overflow:auto; color:#c8eed9; font-size:.88rem; }
+
+    /* Responsive configuration reference table */
+    .table-wrapper { margin-top:24px; overflow:auto; max-inline-size:100%; max-block-size:min(540px, 80vh); container-type:inline-size; border:1px solid var(--line); border-radius:14px; background:var(--panel); }
+    table { width:100%; border-collapse:separate; border-spacing:0; font-size:.92rem; }
+    caption { text-align:start; padding:14px 18px; font-weight:700; color:var(--text); background:var(--panel-alt); border-block-end:1px solid var(--line); }
+    thead { position:sticky; inset-block-start:0; z-index:1; background:var(--panel-alt); }
+    th, td { text-align:start; padding:12px 18px; border-block-end:1px solid var(--line); vertical-align:top; }
+    thead th { color:var(--text); font-weight:700; background:var(--panel-alt); white-space:nowrap; }
+    tbody th { position:sticky; inset-inline-start:0; background:var(--panel); color:var(--mint); font-family:ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-weight:600; white-space:nowrap; }
+    tbody td { color:var(--muted); }
+    tbody tr:last-child th, tbody tr:last-child td { border-block-end:0; }
+
+    @container (width < 600px) {
+      table, thead, tbody, tr, th, td { display:block; }
+      thead { display:none; }
+      tr { margin:12px; border:1px solid var(--line); border-radius:10px; overflow:hidden; }
+      tbody th { position:sticky; inset-block-start:0; z-index:2; background:var(--panel-alt); white-space:normal; }
+      table { --label-2:"Default"; --label-3:"Purpose"; }
+      td { border-block-end:1px solid var(--line); }
+      td:last-child { border-block-end:0; }
+      td:nth-child(2)::before { content:var(--label-2) ": "; font-weight:700; color:var(--text); }
+      td:nth-child(3)::before { content:var(--label-3) ": "; font-weight:700; color:var(--text); }
+    }
+
+    section.faq-group { margin-top:24px; padding:0; border-top:0; display:grid; gap:12px; }
+    details { background:var(--panel); border:1px solid var(--line); border-radius:12px; padding:14px 18px; }
+    summary { cursor:pointer; font-weight:700; color:var(--text); }
+    details[open] summary { margin-bottom:10px; color:var(--mint); }
+
+    footer { padding:28px 0 44px; border-top:1px solid var(--line); color:var(--muted); font-size:.88rem; }
+    @media (max-width:760px) { .hero, .grid, .grid-2, .usage-list { grid-template-columns:1fr; } }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <header>
+      <a class="brand" href="#top"><span class="badge" aria-hidden="true">↯</span> TSPT</a>
+      <nav aria-label="Primary sections">
+        <ul>
+          <li><a href="#features">Features</a></li>
+          <li><a href="#usage">Using the App</a></li>
+          <li><a href="#config">Configuration</a></li>
+          <li><a href="#install">Install</a></li>
+        </ul>
+      </nav>
+    </header>
+    <main id="top">
+      <div class="hero">
+        <div>
+          <div class="eyebrow">Tapo SmartPlug Tray · Linux</div>
+          <h1>Battery &amp; smart plug control in your top bar.</h1>
+          <p><b>TSPT</b> (Tapo SmartPlug Tray) is a tiny native GTK3 + Ayatana AppIndicator applet for Tapo smart plugs (including TPAP firmware 1.4.0+). Zero Electron/Tauri bloat, zero web server required, with built-in 20–80% battery protection and a 15-minute hardware failsafe.</p>
+          <div class="actions">
+            <a class="btn primary" href="#install">Quick Install</a>
+            <a class="btn" href="#config">Config &amp; IP Guide</a>
+          </div>
+        </div>
+        <div class="tray-mock" role="img" aria-label="Preview of the TSPT top bar menu showing battery status, plug controls, auto-charge presets, and config editor">
+          <div class="topbar"><span>Wed 18:05</span><span>Wi-Fi · <b>↯</b> · 74%</span></div>
+          <div class="menu">
+            <div class="item muted"><span>Battery: 74% (Discharging) · 11.8W</span></div>
+            <div class="item muted"><span>Plug: Off (15m failsafe)</span></div>
+            <div class="sep"></div>
+            <div class="item"><span>Turn On</span></div>
+            <div class="item"><span>Turn Off</span></div>
+            <div class="item"><span>Refresh Status</span></div>
+            <div class="sep"></div>
+            <div class="item active"><span>Auto-Charge: On (20%–80%)</span></div>
+            <div class="item"><span>Threshold Presets</span><span>▸</span></div>
+            <div class="sep"></div>
+            <div class="item"><span>Edit Config</span></div>
+            <div class="item"><span>View Activity Log</span></div>
+            <div class="item"><span>Usage &amp; Config Guide</span></div>
+            <div class="sep"></div>
+            <div class="item"><span>Quit</span></div>
+          </div>
+        </div>
+      </div>
+
+      <section id="features">
+        <h2>Why TSPT?</h2>
+        <p>Many laptops on Linux do not expose firmware battery charge thresholds via ACPI. TSPT automates a Tapo smart plug directly from your desktop panel in ~25–35 MB of RAM instead of multi-gigabyte webview wrappers.</p>
+        <div class="grid">
+          <div class="card">
+            <h3>Native Top-Bar Applet</h3>
+            <p>Uses GTK 3 and AyatanaAppIndicator3 with clean monochrome symbolic SVGs that sit naturally beside Wi-Fi and sound icons.</p>
+          </div>
+          <div class="card">
+            <h3>Modern TPAP Protocol</h3>
+            <p>Connects directly over HTTP/TPAP for Tapo P105 v1.4.0+ firmware where legacy KLAP libraries fail with HTTP 403.</p>
+          </div>
+          <div class="card" id="safety">
+            <h3>15-Min Hardware Failsafe</h3>
+            <p>Before cutting charger power, an onboard 15-minute ON countdown is verified on the plug itself, so if your laptop sleeps or loses Wi-Fi, power returns automatically.</p>
+          </div>
+        </div>
+      </section>
+
+      <section id="usage">
+        <h2>Using the Application</h2>
+        <p>Click the plug icon in your Linux panel to view live telemetry, toggle power manually, or adjust Auto-Charge Guard thresholds on the fly:</p>
+        <ul class="usage-list">
+          <li><strong>Battery &amp; Plug Telemetry</strong> Displays live sysfs percentage, charging state, wattage, and whether the 15-minute onboard failsafe is active.</li>
+          <li><strong>Turn On / Turn Off / Refresh Status</strong> Manually switch relay power (with automatic failsafe arming when turning off) or poll live LAN status.</li>
+          <li><strong>Auto-Charge &amp; Threshold Presets</strong> Pause or resume automatic switching in one click, or pick presets (<code>20%–80%</code>, <code>25%–80%</code>, <code>20%–85%</code>, <code>30%–75%</code>).</li>
+          <li><strong>Edit Config, Logs &amp; Built-In Guide</strong> Opens <code>config.json</code>, <code>history.log</code>, or the bundled guide in your desktop text editor. Saved config edits hot-reload automatically.</li>
+        </ul>
+      </section>
+
+      <section id="config">
+        <h2>Editing Configuration &amp; Plug Info</h2>
+        <p>Run <code>tspt init</code> for an interactive wizard (sets plug IP, saves private <code>chmod 600</code> credentials, and auto-probes the plug MAC), or click <strong>Edit Config</strong> in the tray menu to edit <code>~/.config/tspt/config.json</code> directly.</p>
+
+        <figure>
+          <figcaption id="cfg-json-caption">Example <code>~/.config/tspt/config.json</code> (hot-reloads on save):</figcaption>
+          <pre role="region" aria-labelledby="cfg-json-caption" tabindex="0"><code>{
+  "plug": {
+    "ip": "192.168.1.50",
+    "mac": "AA:BB:CC:DD:EE:FF",
+    "model": "P105",
+    "protocol": "tpap"
+  },
+  "battery": {
+    "path": "auto",
+    "serial": ""
+  },
+  "auto_charge": {
+    "enabled": true,
+    "charger_only_confirmed": true,
+    "turn_on": 20,
+    "turn_off": 80
+  },
+  "ui": {
+    "editor": "",
+    "show_label": false,
+    "label_format": "{battery}%",
+    "show_notifications": true
+  },
+  "credentials_file": "~/.config/tspt/credentials.json"
+}</code></pre>
+        </figure>
+
+        <div tabindex="0" role="region" aria-labelledby="config-table-caption" class="table-wrapper">
+          <table>
+            <caption id="config-table-caption">Configuration Reference (<code>~/.config/tspt/config.json</code>)</caption>
+            <thead>
+              <tr>
+                <th>Field</th>
+                <th>Default</th>
+                <th>Purpose</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <th>plug.ip</th>
+                <td><code>""</code></td>
+                <td>Local LAN IPv4 of your Tapo smart plug (check router DHCP list or Tapo app → Device Info; reserve a static DHCP lease).</td>
+              </tr>
+              <tr>
+                <th>plug.mac</th>
+                <td><code>""</code></td>
+                <td>12-hex hardware MAC lock (<code>AA:BB:CC:DD:EE:FF</code>). Required for Auto-Charge so TSPT refuses to toggle another device if IPs change.</td>
+              </tr>
+              <tr>
+                <th>plug.model</th>
+                <td><code>"P105"</code></td>
+                <td>Expected smart plug model string (leave empty <code>""</code> to skip model check).</td>
+              </tr>
+              <tr>
+                <th>plug.protocol</th>
+                <td><code>"tpap"</code></td>
+                <td><code>"tpap"</code> for Tapo P105 firmware 1.4.0+, or <code>"auto"</code> for older Kasa/Tapo devices.</td>
+              </tr>
+              <tr>
+                <th>battery.path</th>
+                <td><code>"auto"</code></td>
+                <td>Auto-detects <code>BAT0</code>/<code>BAT1</code> in <code>/sys/class/power_supply</code>, or set an explicit path.</td>
+              </tr>
+              <tr>
+                <th>battery.serial</th>
+                <td><code>""</code></td>
+                <td>Optional battery serial lock; leave empty to accept any present laptop battery.</td>
+              </tr>
+              <tr>
+                <th>auto_charge.enabled</th>
+                <td><code>false</code></td>
+                <td>Enables background charge-threshold control once <code>charger_only_confirmed</code> is <code>true</code>.</td>
+              </tr>
+              <tr>
+                <th>auto_charge.turn_on / turn_off</th>
+                <td><code>20</code> / <code>80</code></td>
+                <td>Hysteresis bounds (<code>10 &lt;= turn_on &lt; turn_off &lt;= 95</code>). Turns ON at/below <code>turn_on</code>% and OFF at/above <code>turn_off</code>%.</td>
+              </tr>
+              <tr>
+                <th>ui.show_label</th>
+                <td><code>false</code></td>
+                <td>Show live text next to the top-bar icon using <code>ui.label_format</code> (supports <code>{battery}</code>, <code>{status}</code>, <code>{plug}</code>).</td>
+              </tr>
+              <tr>
+                <th>ui.editor</th>
+                <td><code>""</code></td>
+                <td>Optional editor command (e.g. <code>"subl"</code> or <code>"code"</code>); defaults to your desktop's <code>text/plain</code> editor.</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <section class="faq-group" aria-label="Common configuration tasks">
+          <details name="cfg-howto">
+            <summary>How do I change the smart plug IP or replace my plug?</summary>
+            <p>Run <code>tspt init</code> in a terminal to enter the new IP and automatically probe/update the verified <code>plug.mac</code>, or click <strong>Edit Config</strong> in the top-bar menu and update <code>plug.ip</code> and <code>plug.mac</code> directly.</p>
+          </details>
+          <details name="cfg-howto">
+            <summary>Where are my Tapo email and password stored?</summary>
+            <p>Credentials live separately in <code>~/.config/tspt/credentials.json</code> (<code>{"tapo_email": "...", "tapo_password": "..."}</code>) and must have private <code>chmod 600</code> permissions. You can also supply <code>TAPO_EMAIL</code> and <code>TAPO_PASSWORD</code> environment variables instead.</p>
+          </details>
+          <details name="cfg-howto">
+            <summary>Can I control TSPT from scripts or a terminal?</summary>
+            <p>Yes. Use <code>tspt status</code> (or <code>--json</code>), <code>tspt on</code>, <code>tspt off</code>, and <code>tspt check --apply</code> from any terminal.</p>
+          </details>
+        </section>
+      </section>
+
+      <section id="install">
+        <h2>Install in 60 seconds</h2>
+        <figure>
+          <figcaption id="install-cmd-caption">Install dependencies, link the CLI &amp; autostart launcher, and run the setup wizard:</figcaption>
+          <pre role="region" aria-labelledby="install-cmd-caption" tabindex="0"><code>sudo apt install -y python3-gi python3-venv gir1.2-gtk-3.0 gir1.2-ayatanaappindicator3-0.1 libnotify-bin
+./scripts/install.sh --autostart
+tspt init
+tspt</code></pre>
+        </figure>
+      </section>
+    </main>
+    <footer>TSPT (Tapo SmartPlug Tray) · MIT License</footer>
+  </div>
+</body>
+</html>

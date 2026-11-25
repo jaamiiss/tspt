@@ -1,0 +1,34 @@
+[build-system]
+requires = ["setuptools>=64"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "tspt"
+version = "1.0.0"
+description = "TSPT (Tapo SmartPlug Tray) - lightweight native Linux taskbar indicator and 20-80% Auto-Charge Guard."
+readme = "README.md"
+license = { text = "MIT" }
+requires-python = ">=3.11"
+authors = [
+  { name = "jaamiiss" }
+]
+keywords = ["tspt", "linux", "taskbar", "appindicator", "gtk3", "tapo", "smartplug", "battery", "tpap"]
+classifiers = [
+  "Development Status :: 4 - Beta",
+  "Environment :: X11 Applications :: GTK",
+  "Intended Audience :: End Users/Desktop",
+  "License :: OSI Approved :: MIT License",
+  "Operating System :: POSIX :: Linux",
+  "Programming Language :: Python :: 3",
+  "Topic :: System :: Hardware",
+  "Topic :: Utilities",
+]
+
+[project.scripts]
+tspt = "tspt.cli:main"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.setuptools.package-data]
+tspt = ["icons/*.svg", "GUIDE.md"]

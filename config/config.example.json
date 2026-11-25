@@ -1,0 +1,32 @@
+{
+  "plug": {
+    "ip": "192.168.1.50",
+    "mac": "",
+    "model": "P105",
+    "protocol": "tpap"
+  },
+  "battery": {
+    "path": "auto",
+    "serial": ""
+  },
+  "auto_charge": {
+    "enabled": false,
+    "charger_only_confirmed": false,
+    "turn_on": 20,
+    "turn_off": 80,
+    "check_interval_sec": 30,
+    "health_interval_sec": 300
+  },
+  "ui": {
+    "editor": "",
+    "refresh_interval_sec": 3,
+    "show_label": false,
+    "label_format": "{battery}%",
+    "show_notifications": true,
+    "icons": {
+      "plug_on": "tspt-on-symbolic",
+      "plug_off": "tspt-off-symbolic"
+    }
+  },
+  "credentials_file": "~/.config/tspt/credentials.json"
+}

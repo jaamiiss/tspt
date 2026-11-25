@@ -1,0 +1,3 @@
+# Tapo P105 firmware >= 1.4.0 uses the TPAP protocol (older KLAP libraries fail with HTTP 403).
+# Until python-kasa cuts a stable PyPI release containing TPAP support, install the verified commit:
+python-kasa @ https://github.com/ZeliardM/python-kasa/archive/e7084472972f08f2e2235b342f3964aedbfaeb3b.tar.gz#sha256=08209531e261a68d5ac4debcd33dd98c15143cd24752cb0ba6aa61faa0ef6cbd
